@@ -21,27 +21,31 @@ function init() {
   document.body.appendChild( container );
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 5000 );
-  camera.position.z = 1000;
+  camera.position.set(10, 10, -10);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color( 0xf0f0f0 );
 
-  scene.add( new THREE.AmbientLight( 0x505050 ) );
+  scene.add( new THREE.AmbientLight( 0xffffff, 1.0 ) );
 
   var light = new THREE.SpotLight( 0xffffff, 1.0 );
-  light.position.set( 0, 2000, 1000 );
-  light.angle = Math.PI / 3;
-
+  light.position.set( 100, 100, 100 );
   light.castShadow = true;
-  light.shadow.camera.near = 1000;
-  light.shadow.camera.far = 4000;
-  light.shadow.mapSize.width = 1024;
-  light.shadow.mapSize.height = 1024;
-
+  light.shadow.camera.near = 10;
+  light.shadow.camera.far = 400;
+  light.shadow.mapSize.width = 512;
+  light.shadow.mapSize.height = 512;
+  light.angle = Math.PI / 12;
   scene.add( light );
 
   var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
-  light.position.set( 1, -1, -1 ).normalize();
+  light.position.set( 200, 200, 200 );
+  //light.castShadow = true;
+  //light.shadow.camera.near = 1000;
+  //light.shadow.camera.far = 4000;
+  //light.shadow.mapSize.width = 1024;
+  //light.shadow.mapSize.height = 1024;
+  //light.angle = Math.PI / 3;
   scene.add( light );
 
   renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -49,7 +53,7 @@ function init() {
   renderer.setSize( window.innerWidth, window.innerHeight );
 
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.gammaOutput = true;
 
   container.appendChild( renderer.domElement );
@@ -106,6 +110,7 @@ function animate() {
   }
 
   controls.update(delta);
+  //camera.position.y = 20;
   renderer.render( scene, camera );
 
   stats.update();

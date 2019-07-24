@@ -28,16 +28,35 @@
 
   (.load loader "models/assets.glb"
          (fn [gltf]
-           (-> gltf .-scene .-scale (.set 10 10 10))
-           (-> gltf .-scene (.traverse (fn [node] (when (instance? THREE.Mesh node) (aset node "castShadow" true) (aset node "receiveShadow" true)))))
-           (.add scene (.-scene gltf))
-           (let [animations (aget gltf "animations")]
-             (if (and animations (.-length animations))
-               (let [mixer (THREE.AnimationMixer. (.-scene gltf))]
-                 (doseq [a animations]
-                   (js/console.log a)
-                   (.play (.clipAction mixer a)))
-                 (aset js/window "mixer" mixer)))))))
+           (-> gltf .-scene (.traverse (fn [node] (when (instance? THREE.Mesh node)
+                                                    (aset node "castShadow" true)
+                                                    (aset node "receiveShadow" true)))))
+
+           (js/console.log "gltf bundle:" gltf)
+
+           ; This will add the entire Blender scene into the threejs scene
+           ;(.add scene (.-scene gltf))
+
+           (doseq [x (range 10)]
+             (let [tree (.clone (aget gltf "scene" "children" 40))]
+               (-> tree .-position (.set (* 20 (- (js/Math.random) 0.5)) 0 (* 20 (- (js/Math.random) 0.5))))
+               (.add scene tree)))
+
+           ;(aset gltf "scene" "children" 2 "position" "x" 5)
+
+           (.add scene (aget gltf "scene" "children" 41))
+
+           ; parent the player object from Blender to an empty "player"
+           ; Mesh so that we can position it and animate the Blender object
+           (let [player (THREE.Mesh.)
+                 chr (.clone (aget gltf "scene" "children" 2))
+                 mixer (THREE.AnimationMixer. scene)
+                 clip (THREE.AnimationClip.findByName (aget gltf "animations") "Bob")]
+             (-> player .-position (.set 10 0 10))
+             (.add player chr)
+             (.add scene player)
+             (.play (.clipAction mixer clip chr))
+             (aset js/window "mixer" mixer)))))
 
 (defn mount-root []
   ;(r/render [home-page] (.getElementById js/document "app"))
