@@ -1,6 +1,7 @@
 (ns px3d.core
     (:require
-      [reagent.core :as r]))
+      [reagent.core :as r]
+      [px3d.assets :as assets]))
 
 (def objects js/objects)
 (def scene js/scene)
@@ -25,7 +26,7 @@
       (if (== (-> c .-type (.indexOf "Light")) -1)
         (.remove scene c))))
 
-  (.load loader "models/test-model.glb"
+  (.load loader "models/assets.glb"
          (fn [gltf]
            (-> gltf .-scene .-scale (.set 10 10 10))
            (-> gltf .-scene (.traverse (fn [node] (when (instance? THREE.Mesh node) (aset node "castShadow" true) (aset node "receiveShadow" true)))))
@@ -41,6 +42,7 @@
 (defn mount-root []
   ;(r/render [home-page] (.getElementById js/document "app"))
   (console.log "re-load")
+  (print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
   (launch nil))
 
 (defn init! []

@@ -19,7 +19,6 @@
 
   :resource-paths ["public"]
 
-
   :figwheel {:http-server-root "."
              :nrepl-port 7002
              :nrepl-middleware [cider.piggieback/wrap-cljs-repl]
