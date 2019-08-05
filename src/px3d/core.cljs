@@ -18,6 +18,9 @@
 ;; -------------------------
 ;; Initialize app
 
+(defn choice [a]
+  (nth a (int (* (js/Math.random) (count a)))))
+
 (defn launch [objs]
   ; clean up scene
   (let [children (-> scene .-children .slice)]
