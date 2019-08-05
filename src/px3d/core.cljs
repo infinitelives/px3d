@@ -60,11 +60,11 @@
            (aset scene "background" (THREE.Color. background-color))
 
            (let [models (make-models-hash gltf)]
-             (doseq [x (range 100)]
-               (let [tree (.clone (get models (choice ["Tree" "Tree2"])))]
+             (doseq [x (range 150)]
+               (let [tree (.clone (get models (choice (choice [["Tree" "Tree2"] ["Rock001" "Rock002" "Rock003"]]))))]
                  (-> tree .-position (.set (* 150 (- (js/Math.random) 0.5)) 0 (* 150 (- (js/Math.random) 0.5))))
                  (aset tree "rotation" "y" (* (js/Math.random) js/Math.PI 2))
-                 (aset tree "scale" "y" (+ (* (js/Math.random) 0.2) 1))
+                 (aset tree "scale" "y" (+ (* (js/Math.random) 0.5) 1.5))
                  (.add scene tree)))
 
              ;(aset gltf "scene" "children" 2 "position" "x" 5)
