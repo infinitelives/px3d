@@ -7,8 +7,8 @@
 (def scene js/scene)
 (def THREE js/THREE)
 
-;(def background-color 0x20AAF3)
-(def background-color 0xffffff)
+(def background-color 0x20AAF3)
+;(def background-color 0xffffff)
 
 (def loader (THREE.GLTFLoader.))
 
@@ -61,10 +61,10 @@
 
            (let [models (make-models-hash gltf)]
              (doseq [x (range 150)]
-               (let [tree (.clone (get models (choice (choice [["Tree" "Tree2"] ["Rock001" "Rock002" "Rock003"]]))))]
-                 (-> tree .-position (.set (* 150 (- (js/Math.random) 0.5)) 0 (* 150 (- (js/Math.random) 0.5))))
+               (let [tree (.clone (get models (choice (choice [["Tree" "Tree2" "Rock001" "Rock003"]]))))]
+                 (-> tree .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
                  (aset tree "rotation" "y" (* (js/Math.random) js/Math.PI 2))
-                 (aset tree "scale" "y" (+ (* (js/Math.random) 0.5) 1.5))
+                 (aset tree "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
                  (.add scene tree)))
 
              ;(aset gltf "scene" "children" 2 "position" "x" 5)
@@ -74,10 +74,10 @@
              ; parent the player object from Blender to an empty "player"
              ; Mesh so that we can position it and animate the Blender object
              (let [player (THREE.Mesh.)
-                   chr (.clone (get models "Character"))
+                   chr (.clone (get models "Ship"))
                    mixer (THREE.AnimationMixer. scene)
                    clip (THREE.AnimationClip.findByName (aget gltf "animations") "Bob")]
-               (-> player .-position (.set 10 0 10))
+               (-> player .-position (.set 10 3 10))
                (.add player chr)
                (.add scene player)
                (.play (.clipAction mixer clip chr))
