@@ -21,6 +21,9 @@
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
 
+(defn make-models-hash [gltf]
+  (into {} (map (fn [c] [(aget c "name") c]) (aget gltf "scene" "children"))))
+
 (defn launch [objs]
   ; clean up scene
   (let [children (-> scene .-children .slice)]
