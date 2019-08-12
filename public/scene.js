@@ -7,7 +7,8 @@ if (!hash) {
 Math.seedrandom(hash);
 
 var container, stats;
-var camera, controls, scene, renderer, clock, mixer;
+var camera, controls, scene, renderer, clock, mixers;
+var mixers = [];
 var objects = [];
 
 var PIXELATE = 4;
@@ -111,8 +112,8 @@ function animate() {
 
   var delta = clock.getDelta();
 
-  if (mixer) {
-    mixer.update(delta);
+  for (var m=0; m<mixers.length; m++) {
+    mixers[m].update(delta);
   }
 
   controls.update(delta);

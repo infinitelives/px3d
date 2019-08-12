@@ -48,6 +48,18 @@
                            (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
                              (#'handle-pick picked))))))
 
+; parent the Blender mesh to an empty so it can be moved around
+(defn animate [gltf scene mesh-name animation-name]
+  (let [container (THREE.Mesh.)
+        mesh (.clone (.getObjectByName (.-scene gltf) mesh-name))
+        mixer (THREE.AnimationMixer. scene)
+        clip (THREE.AnimationClip.findByName (aget gltf "animations") animation-name)]
+    (.add container mesh)
+    (.add scene container)
+    (.play (.clipAction mixer clip mesh))
+    (.push js/mixers mixer)
+    container))
+
 (defn launch [objs]
   ; clean up scene
   (let [children (-> scene .-children .slice)]
@@ -89,21 +101,13 @@
                (aset obj "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
                (.add scene obj)))
 
-           ;(aset gltf "scene" "children" 2 "position" "x" 5)
-
-           ;(.add scene (aget gltf "scene" "children" 41))
-
-           ; parent the player object from Blender to an empty "player"
-           ; Mesh so that we can position it and animate the Blender object
-           (let [player (THREE.Mesh.)
-                 chr (.clone (.getObjectByName (.-scene gltf) "Ship"))
-                 mixer (THREE.AnimationMixer. scene)
-                 clip (THREE.AnimationClip.findByName (aget gltf "animations") "Bob")]
-             (-> player .-position (.set 10 3 10))
-             (.add player chr)
-             (.add scene player)
-             (.play (.clipAction mixer clip chr))
-             (aset js/window "mixer" mixer)))))
+           ; add a couple of meshes to animate
+           (let [animator (partial animate gltf scene)
+                 ship (animator "Ship" "Bob")
+                 rock (animator "Rock001" "Bob")]
+             (-> ship .-position (.set 10 3 10))
+             (-> rock .-position (.set -5 4 -5))
+             (-> rock .-scale (.set 2 3 2))))))
 
 (defn mount-root []
   ;(r/render [home-page] (.getElementById js/document "app"))
