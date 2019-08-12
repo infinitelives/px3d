@@ -25,9 +25,6 @@
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
 
-(defn make-models-hash [gltf]
-  (into {} (map (fn [c] [(aget c "name") c]) (aget gltf "scene" "children"))))
-
 (defn mouse-pick [ev raycaster container scene camera]
   (let [pos #js {:x (-> ev .-clientX (/ (aget container "clientWidth")) (* 2) (- 1))
                  :y (-> ev .-clientY (/ (aget container "clientHeight")) (* -2) (+ 1))}]
@@ -77,35 +74,36 @@
              (aset ground "position" "y" -0.5)
              (aset ground "receiveShadow" true)
              (aset ground "castShadow" true)
+             (aset ground "name" "Ground")
              (.add scene ground))
 
            ; add fog
            (aset scene "fog" (THREE.FogExp2. background-color 0.0128 10))
            (aset scene "background" (THREE.Color. background-color))
 
-           (let [models (make-models-hash gltf)]
-             (doseq [x (range 150)]
-               (let [tree (.clone (get models (choice (choice [["Tree" "Tree2" "Rock001" "Rock003"]]))))]
-                 (-> tree .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
-                 (aset tree "rotation" "y" (* (js/Math.random) js/Math.PI 2))
-                 (aset tree "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
-                 (.add scene tree)))
 
-             ;(aset gltf "scene" "children" 2 "position" "x" 5)
+           (doseq [x (range 150)]
+             (let [obj (.clone (.getObjectByName (.-scene gltf) (choice ["Tree001" "Tree002" "Tree003" "Rock001" "Rock003"])))]
+               (-> obj .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
+               (aset obj "rotation" "y" (* (js/Math.random) js/Math.PI 2))
+               (aset obj "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
+               (.add scene obj)))
 
-             ;(.add scene (aget gltf "scene" "children" 41))
+           ;(aset gltf "scene" "children" 2 "position" "x" 5)
 
-             ; parent the player object from Blender to an empty "player"
-             ; Mesh so that we can position it and animate the Blender object
-             (let [player (THREE.Mesh.)
-                   chr (.clone (get models "Ship"))
-                   mixer (THREE.AnimationMixer. scene)
-                   clip (THREE.AnimationClip.findByName (aget gltf "animations") "Bob")]
-               (-> player .-position (.set 10 3 10))
-               (.add player chr)
-               (.add scene player)
-               (.play (.clipAction mixer clip chr))
-               (aset js/window "mixer" mixer))))))
+           ;(.add scene (aget gltf "scene" "children" 41))
+
+           ; parent the player object from Blender to an empty "player"
+           ; Mesh so that we can position it and animate the Blender object
+           (let [player (THREE.Mesh.)
+                 chr (.clone (.getObjectByName (.-scene gltf) "Ship"))
+                 mixer (THREE.AnimationMixer. scene)
+                 clip (THREE.AnimationClip.findByName (aget gltf "animations") "Bob")]
+             (-> player .-position (.set 10 3 10))
+             (.add player chr)
+             (.add scene player)
+             (.play (.clipAction mixer clip chr))
+             (aset js/window "mixer" mixer)))))
 
 (defn mount-root []
   ;(r/render [home-page] (.getElementById js/document "app"))
