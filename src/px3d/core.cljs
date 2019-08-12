@@ -115,7 +115,7 @@
                    (fn [delta]
                      ; turn the sky pink when the rock and ship come close together
                      (let [d (.distanceTo (.-position rock) (.-position ship))
-                           r (if (< d 7) 0.99 0.125)]
+                           r (if (< d 3) 0.99 0.125)]
                        (aset scene "background" "r" r)
                        (aset scene "fog" "color" "r" r))
                      ; float the rock around
