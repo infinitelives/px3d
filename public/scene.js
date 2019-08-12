@@ -7,7 +7,7 @@ if (!hash) {
 Math.seedrandom(hash);
 
 var container, stats;
-var camera, controls, scene, renderer, clock, mixers;
+var camera, controls, scene, renderer, clock, mixers, gameloop;
 var mixers = [];
 var objects = [];
 
@@ -117,7 +117,9 @@ function animate() {
   }
 
   controls.update(delta);
-  //camera.position.y = 20;
+  if (gameloop) {
+    gameloop(delta);
+  }
   renderer.render( scene, camera );
 
   stats.update();

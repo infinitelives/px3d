@@ -107,7 +107,21 @@
                  rock (animator "Rock001" "Bob")]
              (-> ship .-position (.set 10 3 10))
              (-> rock .-position (.set -5 4 -5))
-             (-> rock .-scale (.set 2 3 2))))))
+             (-> rock .-scale (.set 2 3 2))
+
+             (aset js/window "gameloop"
+                   (fn [delta]
+                     ; turn the sky pink when the rock and ship come close together
+                     (let [d (.distanceTo (.-position rock) (.-position ship))
+                           r (if (< d 7) 0.99 0.125)]
+                       (aset scene "background" "r" r)
+                       (aset scene "fog" "color" "r" r))
+                     ; float the rock around
+                     (let [now (* (.getTime (js/Date.)) 0.0005)]
+                       (-> rock .-position (.set
+                                             (* (js/Math.sin now) 7)
+                                             4
+                                             (* (js/Math.cos now) 8))))))))))
 
 (defn mount-root []
   ;(r/render [home-page] (.getElementById js/document "app"))
