@@ -67,6 +67,7 @@
       (if (== (-> c .-type (.indexOf "Light")) -1)
         (.remove scene c))))
 
+  ; TODO: show spinner until these assets load
   (.load loader "models/assets.glb"
          (fn [gltf]
            ; set up every mesh to throw and receive shadows
