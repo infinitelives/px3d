@@ -109,6 +109,8 @@
              (-> rock .-position (.set -5 4 -5))
              (-> rock .-scale (.set 2 3 2))
 
+             (aset js/controls "target" (.-position ship))
+
              (aset js/window "gameloop"
                    (fn [delta]
                      ; turn the sky pink when the rock and ship come close together
