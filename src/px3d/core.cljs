@@ -5,6 +5,7 @@
 
 (def objects js/objects)
 (def scene js/scene)
+(def camera js/camera)
 (def THREE js/THREE)
 
 (def background-color 0x20AAF3)
@@ -27,11 +28,34 @@
 (defn make-models-hash [gltf]
   (into {} (map (fn [c] [(aget c "name") c]) (aget gltf "scene" "children"))))
 
+(defn mouse-pick [ev raycaster container scene camera]
+  (let [pos #js {:x (-> ev .-clientX (/ (aget container "clientWidth")) (* 2) (- 1))
+                 :y (-> ev .-clientY (/ (aget container "clientHeight")) (* -2) (+ 1))}]
+    (.setFromCamera
+      raycaster
+      pos
+      camera)
+    (.intersectObjects raycaster (.-children scene) true)))
+
+(defn handle-pick [picked]
+  (doseq [x picked]
+    (js/console.log "picked:" (.-point x) (-> x .-object .-name))))
+
+; register mouse pick event
+(defonce picky
+    (let [raycaster (THREE.Raycaster.)
+          picker (partial mouse-pick raycaster js/container scene camera)]
+      (.addEventListener js/window
+                         "mousedown"
+                         (fn [ev]
+                           (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
+                             (#'handle-pick picked))))))
+
 (defn launch [objs]
   ; clean up scene
   (let [children (-> scene .-children .slice)]
     (doseq [c children]
-      (js/console.log "removing" c (-> c .-type (.indexOf "Light")))
+      ;(js/console.log "removing" c (-> c .-type (.indexOf "Light")))
       (if (== (-> c .-type (.indexOf "Light")) -1)
         (.remove scene c))))
 
