@@ -3,7 +3,6 @@
       [reagent.core :as r]
       [px3d.assets :as assets]))
 
-(def objects js/objects)
 (def scene js/scene)
 (def camera js/camera)
 (def THREE js/THREE)
@@ -70,6 +69,7 @@
 
   (.load loader "models/assets.glb"
          (fn [gltf]
+           ; set up every mesh to throw and receive shadows
            (-> gltf .-scene (.traverse (fn [node] (when (instance? THREE.Mesh node)
                                                     (aset node "castShadow" true)
                                                     (aset node "receiveShadow" true)))))
@@ -93,7 +93,7 @@
            (aset scene "fog" (THREE.FogExp2. background-color 0.0128 10))
            (aset scene "background" (THREE.Color. background-color))
 
-
+           ; create 150 randomly generated pieces of scenery
            (doseq [x (range 150)]
              (let [obj (.clone (.getObjectByName (.-scene gltf) (choice ["Tree001" "Tree002" "Tree003" "Rock001" "Rock003"])))]
                (-> obj .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
