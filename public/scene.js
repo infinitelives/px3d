@@ -72,6 +72,12 @@ function init() {
   controls.staticMoving = true;
   controls.dynamicDampingFactor = 0.3;
 
+  // don't let controls go underground
+  controls.maxPolarAngle = Math.PI/2 - 0.1;
+  // don't allow zoom in/out too far
+  controls.minDistance = 8;
+  controls.maxDistance = 50;
+
   var dragControls = new THREE.DragControls( objects, camera, renderer.domElement );
   dragControls.addEventListener( 'dragstart', function () {
 
