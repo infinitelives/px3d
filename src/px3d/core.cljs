@@ -1,6 +1,5 @@
 (ns px3d.core
     (:require
-      [reagent.core :as r]
       [px3d.assets :as assets]))
 
 (def scene js/scene)
@@ -11,15 +10,6 @@
 ;(def background-color 0xffffff)
 
 (def loader (THREE.GLTFLoader.))
-
-;; -------------------------
-;; Views
-
-(defn home-page []
-  [:div [:h2 "Welcome to Reagent"]])
-
-;; -------------------------
-;; Initialize app
 
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
@@ -127,9 +117,8 @@
                                              (* (js/Math.cos now) 8))))))))))
 
 (defn mount-root []
-  ;(r/render [home-page] (.getElementById js/document "app"))
   (console.log "re-load")
-  (print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
+  ;(print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
   (launch nil))
 
 (defn init! []
