@@ -5,10 +5,12 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.520"]]
+                 [org.clojure/clojurescript "1.10.520"]
+                 [environ "1.1.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-figwheel "0.5.19"]]
+            [lein-figwheel "0.5.19"]
+            [lein-environ "1.1.0"]]
 
   :clean-targets ^{:protect false}
 
@@ -39,16 +41,23 @@
                        :release
                        {:source-paths ["src" "env/prod/cljs"]
                         :compiler
-                        {:output-to "public/js/app.js"
+                        {:output-to "build/js/app.js"
                          :output-dir "public/js/release"
-                         :optimizations :advanced
+                         :optimizations :simple
                          :infer-externs true
                          :pretty-print false}}}}
 
-  :aliases {"package" ["do" "clean" ["cljsbuild" "once" "release"]]}
+  :aliases {"package" ["with-profile" "prod" "do" "clean" ["cljsbuild" "once" "release"]]}
 
   :profiles {:dev {:source-paths ["src" "env/dev/clj"]
                    :dependencies [[binaryage/devtools "0.9.10"]
                                   [figwheel-sidecar "0.5.19"]
                                   [nrepl "0.6.0"]
-                                  [cider/piggieback "0.4.1"]]}})
+                                  [cider/piggieback "0.4.1"]]
+                   :env {:dev true}}
+             :prod {:source-paths ["src" "env/dev/clj"]
+                    :dependencies [[binaryage/devtools "0.9.10"]
+                                   [figwheel-sidecar "0.5.19"]
+                                   [nrepl "0.6.0"]
+                                   [cider/piggieback "0.4.1"]]}})
+
