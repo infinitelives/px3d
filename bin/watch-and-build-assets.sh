@@ -17,5 +17,9 @@ do
     echo -e "(ns px3d.assets)\n(def checksum 0x$checksum)" > $a
     echo "Wrote $a"
   fi
+  if [ "$PROD" != "" ]
+  then
+    exit 0
+  fi
   sleep 0.1
 done
