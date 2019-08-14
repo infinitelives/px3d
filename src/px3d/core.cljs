@@ -100,7 +100,10 @@
              (-> rock .-position (.set -5 4 -5))
              (-> rock .-scale (.set 2 3 2))
 
-             (aset js/controls "target" (.-position ship))
+             (let [astronaut (.clone (.getObjectByName (.-scene gltf) "Astronaut"))]
+               (-> astronaut .-position (.set 8 0 8))
+               (.add scene astronaut)
+               (aset js/controls "target" (.-position astronaut)))
 
              (aset js/window "gameloop"
                    (fn [delta]
