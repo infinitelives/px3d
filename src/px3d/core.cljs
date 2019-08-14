@@ -32,22 +32,25 @@
     (let [raycaster (THREE.Raycaster.)
           picker (partial mouse-pick raycaster js/container scene camera)]
       (.addEventListener js/window
-                         "mousedown"
+                         "mouseup"
                          (fn [ev]
                            (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
                              (#'handle-pick picked))))))
 
 ; parent the Blender mesh to an empty so it can be moved around
-(defn animate [gltf scene mesh-name animation-name]
+(defn animate [gltf scene mesh-name]
   (let [container (THREE.Mesh.)
         mesh (.clone (.getObjectByName (.-scene gltf) mesh-name))
-        mixer (THREE.AnimationMixer. scene)
-        clip (THREE.AnimationClip.findByName (aget gltf "animations") animation-name)]
+        mixer (THREE.AnimationMixer. scene)]
     (.add container mesh)
+    (aset container "mixer" mixer)
     (.add scene container)
-    (.play (.clipAction mixer clip mesh))
     (.push js/mixers mixer)
     container))
+
+(defn play-clip [container animation-name gltf scene]
+  (let [clip (THREE.AnimationClip.findByName (aget gltf "animations") animation-name)]
+    (.play (.clipAction (aget container "mixer") clip (aget container "children" 0)))))
 
 (defn launch [objs]
   ; clean up scene
@@ -73,7 +76,7 @@
            ; add a ground plane
            (let [ground (THREE.Mesh.
                           (THREE.CylinderGeometry. 150 150 1 32)
-                          (THREE.MeshLambertMaterial. #js {:color 0x637C60 :specular 0x000000 :shininess 0}))]
+                          (THREE.MeshLambertMaterial. #js {:color 0x637C60}))]
              (aset ground "position" "y" -0.5)
              (aset ground "receiveShadow" true)
              (aset ground "castShadow" true)
@@ -94,16 +97,23 @@
 
            ; add a couple of meshes to animate
            (let [animator (partial animate gltf scene)
-                 ship (animator "Ship" "Bob")
-                 rock (animator "Rock001" "Bob")]
+                 ship (animator "Ship")
+                 rock (animator "Rock001")
+                 astronaut (animator "Astronaut")]
+             (play-clip ship "Bob" gltf scene)
+             (play-clip rock "Bob" gltf scene)
+             ;(play-clip astronaut "Walk" gltf scene)
              (-> ship .-position (.set 10 3 10))
              (-> rock .-position (.set -5 4 -5))
              (-> rock .-scale (.set 2 3 2))
+             (-> astronaut .-position (.set 8 0 8))
+             (js/console.log astronaut)
+             
+             (aset js/controls "target" (.-position astronaut))
 
-             (let [astronaut (.clone (.getObjectByName (.-scene gltf) "Astronaut"))]
-               (-> astronaut .-position (.set 8 0 8))
-               (.add scene astronaut)
-               (aset js/controls "target" (.-position astronaut)))
+             (js/setTimeout (fn []
+                              (-> astronaut .-mixer .stopAllAction)
+                              (play-clip astronaut "Walk" gltf scene)) 2000)
 
              (aset js/window "gameloop"
                    (fn [delta]
