@@ -1,4 +1,6 @@
-Hot reloading Blender edits into running Three.js ClojureScript.
+![Tech demo](./around.gif)
+
+Hot reloading Blender edits into running Three.js ClojureScript:
 
 ![Screencast](./screencast.gif)
 
