@@ -11,6 +11,8 @@
 
 (def loader (THREE.GLTFLoader.))
 
+(defonce player-target (atom nil))
+
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
 
@@ -25,17 +27,30 @@
 
 (defn handle-pick [picked]
   (doseq [x picked]
+    (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
     (js/console.log "picked:" (.-point x) (-> x .-object .-name))))
 
 ; register mouse pick event
 (defonce picky
-    (let [raycaster (THREE.Raycaster.)
-          picker (partial mouse-pick raycaster js/container scene camera)]
-      (.addEventListener js/window
-                         "mouseup"
-                         (fn [ev]
+  ; TODO: convert to fn returning channel
+  (let [raycaster (THREE.Raycaster.)
+        picker (partial mouse-pick raycaster js/container scene camera)
+        moved (atom false)]
+    (js/console.log "registering mouse events")
+    (.addEventListener js/window
+                       "mousedown"
+                       (fn [ev] (reset! moved false)))
+    (.addEventListener js/window
+                       "mousemove"
+                       (fn [ev] (reset! moved true)))
+    (.addEventListener js/window
+                       "mouseup"
+                       (fn [ev]
+                         (when (not @moved)
                            (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
-                             (#'handle-pick picked))))))
+                             ; TODO: also return screen X,Y
+                             (#'handle-pick picked)))))
+    true))
 
 ; parent the Blender mesh to an empty so it can be moved around
 (defn animate [gltf scene mesh-name]
@@ -48,8 +63,12 @@
     (.push js/mixers mixer)
     container))
 
+(defn stop-clip [container]
+  (-> container .-mixer .stopAllAction))
+
 (defn play-clip [container animation-name gltf scene]
   (let [clip (THREE.AnimationClip.findByName (aget gltf "animations") animation-name)]
+    (stop-clip container)
     (.play (.clipAction (aget container "mixer") clip (aget container "children" 0)))))
 
 (defn launch [objs]
@@ -101,32 +120,56 @@
                  rock (animator "Rock001")
                  astronaut (animator "Astronaut")]
              (play-clip ship "Bob" gltf scene)
-             (play-clip rock "Bob" gltf scene)
-             ;(play-clip astronaut "Walk" gltf scene)
              (-> ship .-position (.set 10 3 10))
              (-> rock .-position (.set -5 4 -5))
              (-> rock .-scale (.set 2 3 2))
              (-> astronaut .-position (.set 8 0 8))
              (js/console.log astronaut)
-             
+
              (aset js/controls "target" (.-position astronaut))
 
-             (js/setTimeout (fn []
-                              (-> astronaut .-mixer .stopAllAction)
-                              (play-clip astronaut "Walk" gltf scene)) 2000)
+             ;(js/setTimeout (fn []
+             ;                 (-> astronaut .-mixer .stopAllAction)
+             ;                 (play-clip astronaut "Walk" gltf scene)) 2000)
+
+             ; lol what a hack
+             (defonce player-animation-watcher
+               (do
+                 (add-watch player-target :watcher
+                            (fn [key atom old-state new-state]
+                              (when (and (nil? old-state) new-state)
+                                (play-clip astronaut "Walk" gltf scene))))
+                 true))
 
              (aset js/window "gameloop"
                    (fn [delta]
-                     ; turn the sky pink when the rock and ship come close together
-                     (let [d (.distanceTo (.-position rock) (.-position ship))
-                           r (if (< d 3) 0.99 0.125)]
+                     ; if the player is not on target
+                     (let [target @player-target
+                           pos (.-position astronaut)]
+                       (when target
+                         (if (< (.distanceTo pos target) 0.1)
+                           ; player has reached target
+                           (do
+                             (reset! player-target nil)
+                             (stop-clip astronaut))
+                           ; player move towards target
+                           (let [move (.clone target)
+                                 look (.clone target)
+                                 dir (-> move (.sub pos) .normalize (.multiplyScalar 0.1))]
+                             (.lookAt astronaut look)
+                             (.rotateY astronaut (/ Math.PI 2.0))
+                             (-> astronaut .-rotation)
+                             (.add pos dir)))))
+                     ; turn the sky pink when the rock and player come close together
+                     (let [d (.distanceTo (.-position rock) (.-position astronaut))
+                           r (if (< d 5) 0.99 0.125)]
                        (aset scene "background" "r" r)
                        (aset scene "fog" "color" "r" r))
                      ; float the rock around
                      (let [now (* (.getTime (js/Date.)) 0.0005)]
                        (-> rock .-position (.set
                                              (* (js/Math.sin now) 7)
-                                             4
+                                             (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
                                              (* (js/Math.cos now) 8))))))))))
 
 (defn mount-root []
