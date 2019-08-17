@@ -13,6 +13,12 @@
 
 (defonce player-target (atom nil))
 
+; seed random number generator from URL hash fragment
+(let [hashfrag (-> js/window .-location .-hash (.substr 1))
+      hashfrag (if (= hashfrag "") (-> js/Math .random .toString (.split ".") .pop) hashfrag)]
+  (aset js/window "location" "hash" hashfrag)
+  (.seedrandom js/Math hashfrag))
+
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
 

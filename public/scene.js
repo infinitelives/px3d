@@ -1,11 +1,3 @@
-// seed random number generator from URL hash fragment
-var hash = window.location.hash.substr(1);
-if (!hash) {
-  hash = Math.random().toString().split(".")[1];
-  window.location.hash = hash;
-}
-Math.seedrandom(hash);
-
 var container, stats;
 var camera, controls, scene, renderer, clock, mixers, gameloop;
 var mixers = [];
