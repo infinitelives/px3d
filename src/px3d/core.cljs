@@ -177,10 +177,21 @@
                                              (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
                                              (* (js/Math.cos now) 8))))))))))
 
+(defn animation-loop []
+  (js/requestAnimationFrame (fn [] (animation-loop)))
+  (let [delta (.getDelta js/clock)]
+    (.map js/mixers (fn [mixer] (.update mixer delta)))
+    (.update js/controls)
+    (if js/gameloop
+      (js/gameloop delta))
+    (.render js/renderer js/scene js/camera)
+    (.update js/stats)))
+
 (defn mount-root []
   (console.log "re-load")
   ;(print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
   (launch nil))
 
 (defn init! []
+  (animation-loop)
   (mount-root))

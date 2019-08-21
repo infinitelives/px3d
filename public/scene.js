@@ -6,7 +6,6 @@ var objects = [];
 var PIXELATE = 4;
 
 init();
-animate();
 
 function init() {
   
@@ -100,26 +99,4 @@ function onWindowResize() {
 
   renderer.domElement.style.width = window.innerWidth + "px";
   renderer.domElement.style.height = window.innerHeight + "px";
-}
-
-//
-
-function animate() {
-
-  requestAnimationFrame( animate );
-
-  var delta = clock.getDelta();
-
-  for (var m=0; m<mixers.length; m++) {
-    mixers[m].update(delta);
-  }
-
-  controls.update(delta);
-  if (gameloop) {
-    gameloop(delta);
-  }
-  renderer.render( scene, camera );
-
-  stats.update();
-
 }
