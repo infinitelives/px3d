@@ -69,17 +69,17 @@ function init() {
   controls.minDistance = 5;
   controls.maxDistance = 50;
 
+  /* Example code for dragging objects around in the scene
+   * TODO: convert me to cljs
+   * requires: examples/js/controls/DragControls.js
   var dragControls = new THREE.DragControls( objects, camera, renderer.domElement );
   dragControls.addEventListener( 'dragstart', function () {
-
     controls.enabled = false;
-
   } );
   dragControls.addEventListener( 'dragend', function () {
-
     controls.enabled = true;
-
   } );
+  */
 
   stats = new Stats();
   container.appendChild( stats.dom );
