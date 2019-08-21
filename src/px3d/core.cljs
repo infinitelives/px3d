@@ -41,21 +41,20 @@
   ; TODO: convert to fn returning channel
   (let [raycaster (THREE.Raycaster.)
         picker (partial mouse-pick raycaster js/container scene camera)
-        moved (atom false)]
-    (js/console.log "registering mouse events")
-    (.addEventListener js/window
-                       "mousedown"
-                       (fn [ev] (reset! moved false)))
-    (.addEventListener js/window
-                       "mousemove"
-                       (fn [ev] (reset! moved true)))
-    (.addEventListener js/window
-                       "mouseup"
-                       (fn [ev]
-                         (when (not @moved)
-                           (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
-                             ; TODO: also return screen X,Y
-                             (#'handle-pick picked)))))
+        moved (atom false)
+        down (fn [ev] (reset! moved [(.-clientX ev) (.-clientY ev)]))
+        done (fn [ev]
+               (let [[ox oy] @moved]
+               (when (and (< (js/Math.abs (- ox (.-clientX ev))) 5)
+                          (< (js/Math.abs (- oy (.-clientY ev))) 5))
+                 (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
+                   ; TODO: also return screen X,Y
+                   (#'handle-pick picked)))))]
+    (js/console.log "registering mouse/touch events")
+    (.addEventListener js/window "mousedown" down false)
+    (.addEventListener js/window "mouseup" done false)
+    (.addEventListener js/window "touchstart" (fn [ev] (down (aget ev "changedTouches" 0)) (.preventDefault ev) false) false)
+    (.addEventListener js/window "touchend" (fn [ev] (done (aget ev "changedTouches" 0)) (.preventDefault ev) false) false)
     true))
 
 ; parent the Blender mesh to an empty so it can be moved around
