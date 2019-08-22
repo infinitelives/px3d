@@ -62,7 +62,7 @@
     (.add container mesh)
     (aset container "mixer" mixer)
     (.add scene container)
-    ;(.push js/mixers mixer) <- (swap! mixers conj mixer) if necessary
+    (swap! engine/mixers conj mixer)
     container))
 
 (defn stop-clip [container]

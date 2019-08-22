@@ -1,6 +1,7 @@
 (ns px3d.engine)
 
 (defonce engine (atom {:started? false}))
+(def mixers (atom []))
 (defonce gameloop (atom nil))
 
 (defonce THREE js/THREE)
@@ -86,6 +87,8 @@
   []
   (let [delta (.getDelta clock)]
     (js/requestAnimationFrame animate)
+    (doseq [m @mixers]
+      (.update m delta))
     (.update controls delta)
     (when-let [f @gameloop] (f delta))
     (.render renderer scene camera)
