@@ -1,10 +1,7 @@
 (ns px3d.core
     (:require
+      [px3d.engine :as engine :refer [engine scene camera controls renderer gameloop THREE]]
       [px3d.assets :as assets]))
-
-(def scene js/scene)
-(def camera js/camera)
-(def THREE js/THREE)
 
 (def background-color 0x20AAF3)
 ;(def background-color 0xffffff)
@@ -40,14 +37,14 @@
 (defonce picky
   ; TODO: convert to fn returning channel
   (let [raycaster (THREE.Raycaster.)
-        picker (partial mouse-pick raycaster js/container scene camera)
+        picker (partial mouse-pick raycaster #js {} scene camera)
         moved (atom false)
         down (fn [ev] (reset! moved [(.-clientX ev) (.-clientY ev)]))
         done (fn [ev]
                (let [[ox oy] @moved]
                (when (and (< (js/Math.abs (- ox (.-clientX ev))) 5)
                           (< (js/Math.abs (- oy (.-clientY ev))) 5))
-                 (let [picked (#'mouse-pick ev raycaster (aget js/renderer "domElement") scene camera)]
+                 (let [picked (#'mouse-pick ev raycaster (aget renderer "domElement") scene camera)]
                    ; TODO: also return screen X,Y
                    (#'handle-pick picked)))))]
     (js/console.log "registering mouse/touch events")
@@ -65,7 +62,7 @@
     (.add container mesh)
     (aset container "mixer" mixer)
     (.add scene container)
-    (.push js/mixers mixer)
+    ;(.push js/mixers mixer) <- (swap! mixers conj mixer) if necessary
     container))
 
 (defn stop-clip [container]
@@ -131,7 +128,7 @@
              (-> astronaut .-position (.set 8 0 8))
              (js/console.log astronaut)
 
-             (aset js/controls "target" (.-position astronaut))
+             (aset controls "target" (.-position astronaut))
 
              ;(js/setTimeout (fn []
              ;                 (-> astronaut .-mixer .stopAllAction)
@@ -146,7 +143,7 @@
                                 (play-clip astronaut "Walk" gltf scene))))
                  true))
 
-             (aset js/window "gameloop"
+             (reset! gameloop
                    (fn [delta]
                      ; if the player is not on target
                      (let [target @player-target
@@ -177,21 +174,16 @@
                                              (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
                                              (* (js/Math.cos now) 8))))))))))
 
-(defn animation-loop []
-  (js/requestAnimationFrame (fn [] (animation-loop)))
-  (let [delta (.getDelta js/clock)]
-    (.map js/mixers (fn [mixer] (.update mixer delta)))
-    (.update js/controls)
-    (if js/gameloop
-      (js/gameloop delta))
-    (.render js/renderer js/scene js/camera)
-    (.update js/stats)))
-
 (defn mount-root []
   (console.log "re-load")
   ;(print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
   (launch nil))
 
 (defn init! []
-  (animation-loop)
+  (when-not (:started? @engine)
+    (do
+      (engine/init 4)
+      (engine/animate)
+      (swap! engine assoc :started? true)))
   (mount-root))
+
