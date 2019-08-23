@@ -1,6 +1,6 @@
 (ns px3d.core
     (:require
-      [px3d.engine :as engine :refer [scene camera renderer gameloop THREE]]
+      [px3d.engine :as engine :refer [renderer gameloop THREE]]
       [px3d.picker :as picker]
       [px3d.procgen :as procgen]
       [px3d.animation :as animation]
@@ -10,11 +10,12 @@
 
 (procgen/seed-from-hash)
 
-(defonce e (engine/init :pixel-size 4))
-(defonce controls (engine/add-default-controls engine/camera engine/renderer))
-(defonce anim (engine/animate controls scene))
+(defonce e (atom (engine/init :pixel-size 4)))
+(defonce anim (engine/animate (@e :controls) (@e :scene) (@e :camera)))
 
-(js/console.log "scene" engine/scene)
+(def scene (@e :scene))
+
+(js/console.log "scene" scene)
 
 (engine/remove-all-meshes scene)
 (engine/setup-default-scene scene)
@@ -57,7 +58,7 @@
       (-> astronaut .-position (.set 8 0 8))
       (js/console.log astronaut)
 
-      (aset controls "target" (.-position astronaut))
+      (aset (@e :controls) "target" (.-position astronaut))
 
       (defn picked [objects]
         (doseq [x objects]
@@ -67,7 +68,7 @@
 
       ; handle mouse picking
       (defonce pick
-        (picker/register [scene camera renderer] #'picked))
+        (picker/register [scene (@e :camera) renderer] #'picked))
 
       (reset! gameloop
               (fn [delta]
@@ -98,7 +99,7 @@
                   (-> rock .-position (.set
                                         (* (js/Math.sin now) 7)
                                         (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
-                                        (* (js/Math.cos now) 8))))))))  )
+                                        (* (js/Math.cos now) 8)))))))))
 
 ; figwheel
 (defn init! [])
