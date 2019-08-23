@@ -23,17 +23,7 @@
     (set! (.. renderer -domElement -style -width) (str (.-innerWidth js/window) "px"))
     (set! (.. renderer -domElement -style -height) (str (.-innerHeight js/window) "px"))))
 
-(defn init
-  [PIXELATE]
-  (let [;dragControls (new THREE.DragControls #js [] camera (.-domElement renderer))
-        container (.createElement js/document "div")]
-
-    (.appendChild (.-body js/document) container)
-  
-    (.set (.-position camera) 10 10 (- 10))
-  
-    (set! (.-background scene) (new THREE.Color 0xf0f0f0))
-    
+(defn add-default-lights [scene]
     (.add scene (new THREE.AmbientLight 0xffffff 1.0))
   
     (let [light (new THREE.SpotLight 0xffffff 1.0)]
@@ -48,10 +38,21 @@
   
     (let [light (new THREE.DirectionalLight 0xffffff 0.5)]
       (.set (.-position light) 200 200 200)
-      (.add scene light))
-  
+      (.add scene light)))
+
+(defn init
+  [PIXELATE]
+  (let [;dragControls (new THREE.DragControls #js [] camera (.-domElement renderer))
+        container (.createElement js/document "div")]
+
+    (.appendChild (.-body js/document) container)
+
+    (.set (.-position camera) 10 10 (- 10))
+
+    (set! (.-background scene) (new THREE.Color 0xf0f0f0))
+
     (.setPixelRatio renderer (.-devicePixelRatio js/window))
-  
+
     (.setSize
       renderer
       (/ (.-innerWidth js/window) PIXELATE)

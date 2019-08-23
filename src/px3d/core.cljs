@@ -77,9 +77,9 @@
   ; clean up scene
   (let [children (-> scene .-children .slice)]
     (doseq [c children]
-      ;(js/console.log "removing" c (-> c .-type (.indexOf "Light")))
-      (if (== (-> c .-type (.indexOf "Light")) -1)
-        (.remove scene c))))
+      (.remove scene c)))
+
+  (engine/add-default-lights scene)
 
   ; TODO: show spinner until these assets load
   (.load loader "models/assets.glb"
