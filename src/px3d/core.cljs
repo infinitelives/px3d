@@ -6,12 +6,12 @@
       [px3d.animation :as animation]
       [px3d.assets :as assets]))
 
+(procgen/seed-from-hash)
+
 ; game state
 (defonce state
   (atom {:player-target
          (THREE.Vector3. 8 0 8)}))
-
-(procgen/seed-from-hash)
 
 ; create the px3d engine and start an animation loop
 (defonce e (engine/start-animation-loop
@@ -80,6 +80,8 @@
       (swap! state assoc :player-target (THREE.Vector3. (-> obj .-point .-x) 0 (-> obj .-point .-z))))))
 
 ; do some stuff in the world
+; if using core.async this could be a bunch of independent
+; entity loops
 (defn gameloop []
   ; if the player is not on target
   (let [{:keys [astronaut rock ship player-target]} @state
