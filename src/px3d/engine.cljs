@@ -5,7 +5,6 @@
 (defonce THREE js/THREE)
 
 (defonce stats (new js/Stats))
-(defonce clock (new THREE.Clock))
 
 (def loader (THREE.GLTFLoader.))
 
@@ -68,10 +67,10 @@
     (doseq [c children]
       (.remove scene c))))
 
-(defn animate [eng]
+(defn animate [eng clock]
   (let [delta (.getDelta clock)
         {:keys [camera scene renderer controls]} @eng]
-    (js/requestAnimationFrame (partial animate eng))
+    (js/requestAnimationFrame (partial animate eng clock))
     (.traverse
       scene
       (fn [obj]
@@ -83,6 +82,11 @@
     (.render renderer scene camera)
     (.update stats)
     true))
+
+(defn start-animation-loop [eng]
+  (let [clock (THREE.Clock.)]
+    (animate eng clock))
+  eng)
 
 (defn add-default-lights [scene]
   (.add scene (THREE.AmbientLight. 0xffffff 1.0))

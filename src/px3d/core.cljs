@@ -10,8 +10,8 @@
 
 (procgen/seed-from-hash)
 
-(defonce e (atom (engine/init :pixel-size 4)))
-(defonce anim (engine/animate e))
+(defonce e (engine/start-animation-loop
+             (atom (engine/init :pixel-size 4))))
 
 (def scene (@e :scene))
 
