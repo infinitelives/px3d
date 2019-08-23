@@ -1,6 +1,7 @@
 (ns px3d.core
     (:require
       [px3d.engine :as engine :refer [scene camera renderer gameloop THREE]]
+      [px3d.picker :as picker]
       [px3d.assets :as assets]))
 
 (def background-color 0x20AAF3)
@@ -18,41 +19,6 @@
 
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
-
-(defn mouse-pick [ev raycaster container scene camera]
-  (let [pos #js {:x (-> ev .-clientX (/ (aget container "clientWidth")) (* 2) (- 1))
-                 :y (-> ev .-clientY (/ (aget container "clientHeight")) (* -2) (+ 1))}]
-    (.setFromCamera
-      raycaster
-      pos
-      camera)
-    (.intersectObjects raycaster (.-children scene) true)))
-
-(defn handle-pick [picked]
-  (doseq [x picked]
-    (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
-    (js/console.log "picked:" (.-point x) (-> x .-object .-name))))
-
-; register mouse pick event
-(defonce picky
-  ; TODO: convert to fn returning channel
-  (let [raycaster (THREE.Raycaster.)
-        picker (partial mouse-pick raycaster #js {} scene camera)
-        moved (atom false)
-        down (fn [ev] (reset! moved [(.-clientX ev) (.-clientY ev)]))
-        done (fn [ev]
-               (let [[ox oy] @moved]
-               (when (and (< (js/Math.abs (- ox (.-clientX ev))) 5)
-                          (< (js/Math.abs (- oy (.-clientY ev))) 5))
-                 (let [picked (#'mouse-pick ev raycaster (aget renderer "domElement") scene camera)]
-                   ; TODO: also return screen X,Y
-                   (#'handle-pick picked)))))]
-    (js/console.log "registering mouse/touch events")
-    (.addEventListener js/window "mousedown" down false)
-    (.addEventListener js/window "mouseup" done false)
-    (.addEventListener js/window "touchstart" (fn [ev] (down (aget ev "changedTouches" 0)) (.preventDefault ev) false) false)
-    (.addEventListener js/window "touchend" (fn [ev] (done (aget ev "changedTouches" 0)) (.preventDefault ev) false) false)
-    true))
 
 ; parent the Blender mesh to an empty so it can be moved around
 (defn animate [gltf scene mesh-name]
@@ -173,6 +139,13 @@
                                              (* (js/Math.sin now) 7)
                                              (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
                                              (* (js/Math.cos now) 8))))))))))
+
+; handle mouse picking
+(picker/register [scene camera renderer]
+  (fn [picked]
+    (doseq [x picked]
+      (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
+      (js/console.log "picked:" (.-point x) (-> x .-object .-name)))))
 
 (defonce e (engine/init :pixel-size 4))
 (defonce controls (engine/add-default-controls engine/camera engine/renderer))
