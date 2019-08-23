@@ -60,6 +60,7 @@
         (-> ship .-position (.set 10 3 10))
         (-> rock .-position (.set -5 4 -5))
         (-> rock .-scale (.set 2 3 2))
+        (-> astronaut .-position (.set 8 0 8))
         ; center the orbit controls on the astronaut
         (aset controls "target" (.-position astronaut))
 
