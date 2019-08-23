@@ -2,6 +2,7 @@
     (:require
       [px3d.engine :as engine :refer [scene camera renderer gameloop THREE]]
       [px3d.picker :as picker]
+      [px3d.animation :as animation]
       [px3d.assets :as assets]))
 
 (def background-color 0x20AAF3)
@@ -19,24 +20,6 @@
 
 (defn choice [a]
   (nth a (int (* (js/Math.random) (count a)))))
-
-; parent the Blender mesh to an empty so it can be moved around
-(defn animator [gltf scene mesh-name]
-  (let [container (THREE.Mesh.)
-        mesh (.clone (.getObjectByName (.-scene gltf) mesh-name))
-        mixer (THREE.AnimationMixer. scene)]
-    (.add container mesh)
-    (aset container "mixer" mixer)
-    (.add scene container)
-    container))
-
-(defn stop-clip [container]
-  (-> container .-mixer .stopAllAction))
-
-(defn play-clip [container animation-name gltf scene]
-  (let [clip (THREE.AnimationClip.findByName (aget gltf "animations") animation-name)]
-    (stop-clip container)
-    (.play (.clipAction (aget container "mixer") clip (aget container "children" 0)))))
 
 (defn launch [controls]
   (js/console.log "scene" engine/scene)
@@ -84,11 +67,11 @@
                (.add scene obj)))
 
            ; add a couple of meshes to animate
-           (let [a (partial animator gltf scene)
+           (let [a (partial animation/animator gltf scene)
                  ship (a "Ship")
                  rock (a "Rock001")
                  astronaut (a "Astronaut")]
-             (play-clip ship "Bob" gltf scene)
+             (animation/play-clip ship "Bob" gltf scene)
              (-> ship .-position (.set 10 3 10))
              (-> rock .-position (.set -5 4 -5))
              (-> rock .-scale (.set 2 3 2))
@@ -97,24 +80,10 @@
 
              (aset controls "target" (.-position astronaut))
 
-             ;(js/setTimeout (fn []
-             ;                 (-> astronaut .-mixer .stopAllAction)
-             ;                 (play-clip astronaut "Walk" gltf scene)) 2000)
-
-             ; lol what a hack
-             #_ (defonce player-animation-watcher
-               (do
-                 (add-watch player-target :watcher
-                            (fn [key atom old-state new-state]
-                              (when (and (nil? old-state) new-state)
-                                (js/console.log "triggering walk")
-                                (play-clip astronaut "Walk" gltf scene))))
-                 true))
-
              (defn picked [objects]
                (doseq [x objects]
                  (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
-                 (play-clip astronaut "Walk" gltf scene)
+                 (animation/play-clip astronaut "Walk" gltf scene)
                  (js/console.log "picked:" (.-point x) (-> x .-object .-name))))
 
              ; handle mouse picking
@@ -131,7 +100,7 @@
                              ; player has reached target
                              (do
                                (reset! player-target nil)
-                               (stop-clip astronaut))
+                               (animation/stop-clip astronaut))
                              ; player move towards target
                              (let [move (.clone target)
                                    look (.clone target)
