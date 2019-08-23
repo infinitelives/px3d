@@ -1,6 +1,6 @@
 (ns px3d.core
     (:require
-      [px3d.engine :as engine :refer [renderer gameloop THREE]]
+      [px3d.engine :as engine :refer [gameloop THREE]]
       [px3d.picker :as picker]
       [px3d.procgen :as procgen]
       [px3d.animation :as animation]
@@ -11,7 +11,7 @@
 (procgen/seed-from-hash)
 
 (defonce e (atom (engine/init :pixel-size 4)))
-(defonce anim (engine/animate (@e :controls) (@e :scene) (@e :camera)))
+(defonce anim (engine/animate e))
 
 (def scene (@e :scene))
 
@@ -68,7 +68,7 @@
 
       ; handle mouse picking
       (defonce pick
-        (picker/register [scene (@e :camera) renderer] #'picked))
+        (picker/register [scene (@e :camera) (@e :renderer)] #'picked))
 
       (reset! gameloop
               (fn [delta]

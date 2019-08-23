@@ -4,13 +4,12 @@
 
 (defonce THREE js/THREE)
 
-(defonce renderer (new THREE.WebGLRenderer #js {:antialias false}))
 (defonce stats (new js/Stats))
 (defonce clock (new THREE.Clock))
 
 (def loader (THREE.GLTFLoader.))
 
-(defn on-window-resize [pixel-size camera]
+(defn on-window-resize [pixel-size camera renderer]
   (set! (.-aspect camera) (/ (.-innerWidth js/window) (.-innerHeight js/window)))
   (.updateProjectionMatrix camera)
   (.setSize renderer (/ (.-innerWidth js/window) pixel-size) (/ (.-innerHeight js/window) pixel-size))
@@ -39,7 +38,8 @@
   [& {:keys [pixel-size] :or {pixel-size 4}}]
   (let [container (.createElement js/document "div")
         scene (THREE.Scene.)
-        camera (THREE.PerspectiveCamera. 70 (/ (.-innerWidth js/window) (.-innerHeight js/window)) 1 5000)]
+        camera (THREE.PerspectiveCamera. 70 (/ (.-innerWidth js/window) (.-innerHeight js/window)) 1 5000)
+        renderer (new THREE.WebGLRenderer #js {:antialias false})]
 
     (.appendChild (.-body js/document) container)
 
@@ -56,18 +56,22 @@
     (set! (.-gammaOutput renderer) true)
     (.appendChild container (.-domElement renderer))
     (.appendChild container (.-dom stats))
-    (.addEventListener js/window "resize" (partial on-window-resize pixel-size camera) false)
-    (on-window-resize pixel-size camera)
-    {:scene scene :controls (add-default-controls camera renderer) :camera camera}))
+    (.addEventListener js/window "resize" (partial on-window-resize pixel-size camera renderer) false)
+    (on-window-resize pixel-size camera renderer)
+    {:scene scene
+     :controls (add-default-controls camera renderer)
+     :camera camera
+     :renderer renderer}))
 
 (defn remove-all-meshes [scene]
   (let [children (-> scene .-children .slice)]
     (doseq [c children]
       (.remove scene c))))
 
-(defn animate [controls scene camera]
-  (let [delta (.getDelta clock)]
-    (js/requestAnimationFrame (partial animate controls scene camera))
+(defn animate [eng]
+  (let [delta (.getDelta clock)
+        {:keys [camera scene renderer controls]} @eng]
+    (js/requestAnimationFrame (partial animate eng))
     (.traverse
       scene
       (fn [obj]
