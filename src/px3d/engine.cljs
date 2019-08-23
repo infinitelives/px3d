@@ -1,7 +1,5 @@
 (ns px3d.engine)
 
-(defonce gameloop (atom nil))
-
 (defonce THREE js/THREE)
 
 (defn on-window-resize [pixel-size camera renderer]
@@ -65,10 +63,10 @@
     (doseq [c children]
       (.remove scene c))))
 
-(defn animate [eng clock]
+(defn animate [eng callback clock]
   (let [delta (.getDelta clock)
         {:keys [camera scene renderer controls stats]} @eng]
-    (js/requestAnimationFrame (partial animate eng clock))
+    (js/requestAnimationFrame (partial animate eng callback clock))
     (.traverse
       scene
       (fn [obj]
@@ -76,14 +74,15 @@
           (when m
             (.update m delta)))))
     (.update controls delta)
-    (when-let [f @gameloop] (f delta))
+    (when callback
+      (callback delta))
     (.render renderer scene camera)
     (.update stats)
     true))
 
-(defn start-animation-loop [eng]
+(defn start-animation-loop [eng callback]
   (let [clock (THREE.Clock.)]
-    (animate eng clock))
+    (animate eng callback clock))
   eng)
 
 (defn add-default-lights [scene]
