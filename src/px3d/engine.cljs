@@ -1,6 +1,5 @@
 (ns px3d.engine)
 
-(def mixers (atom []))
 (defonce gameloop (atom nil))
 
 (defonce THREE js/THREE)
@@ -39,17 +38,23 @@
     (.appendChild container (.-domElement renderer))
     (.appendChild container (.-dom stats))
     (.addEventListener js/window "resize" (partial on-window-resize pixel-size) false)
-    (on-window-resize pixel-size)))
+    (on-window-resize pixel-size)
+    true))
 
-(defn animate [controls]
+(defn animate [controls scene]
   (let [delta (.getDelta clock)]
-    (js/requestAnimationFrame (partial animate controls))
-    (doseq [m @mixers]
-      (.update m delta))
+    (js/requestAnimationFrame (partial animate controls scene))
+    (.traverse
+      scene
+      (fn [obj]
+        (let [m (aget obj "mixer")]
+          (when m
+            (.update m delta)))))
     (.update controls delta)
     (when-let [f @gameloop] (f delta))
     (.render renderer scene camera)
-    (.update stats)))
+    (.update stats)
+    true))
 
 (defn add-default-lights [scene]
   (.add scene (new THREE.AmbientLight 0xffffff 1.0))

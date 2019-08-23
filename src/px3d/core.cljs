@@ -21,14 +21,13 @@
   (nth a (int (* (js/Math.random) (count a)))))
 
 ; parent the Blender mesh to an empty so it can be moved around
-(defn animate [gltf scene mesh-name]
+(defn animator [gltf scene mesh-name]
   (let [container (THREE.Mesh.)
         mesh (.clone (.getObjectByName (.-scene gltf) mesh-name))
         mixer (THREE.AnimationMixer. scene)]
     (.add container mesh)
     (aset container "mixer" mixer)
     (.add scene container)
-    (swap! engine/mixers conj mixer)
     container))
 
 (defn stop-clip [container]
@@ -40,6 +39,8 @@
     (.play (.clipAction (aget container "mixer") clip (aget container "children" 0)))))
 
 (defn launch [controls]
+  (js/console.log "scene" engine/scene)
+
   ; clean up scene
   (let [children (-> scene .-children .slice)]
     (doseq [c children]
@@ -83,10 +84,10 @@
                (.add scene obj)))
 
            ; add a couple of meshes to animate
-           (let [animator (partial animate gltf scene)
-                 ship (animator "Ship")
-                 rock (animator "Rock001")
-                 astronaut (animator "Astronaut")]
+           (let [a (partial animator gltf scene)
+                 ship (a "Ship")
+                 rock (a "Rock001")
+                 astronaut (a "Astronaut")]
              (play-clip ship "Bob" gltf scene)
              (-> ship .-position (.set 10 3 10))
              (-> rock .-position (.set -5 4 -5))
@@ -101,56 +102,59 @@
              ;                 (play-clip astronaut "Walk" gltf scene)) 2000)
 
              ; lol what a hack
-             (defonce player-animation-watcher
+             #_ (defonce player-animation-watcher
                (do
                  (add-watch player-target :watcher
                             (fn [key atom old-state new-state]
                               (when (and (nil? old-state) new-state)
+                                (js/console.log "triggering walk")
                                 (play-clip astronaut "Walk" gltf scene))))
                  true))
 
-             (reset! gameloop
-                   (fn [delta]
-                     ; if the player is not on target
-                     (let [target @player-target
-                           pos (.-position astronaut)]
-                       (when target
-                         (if (< (.distanceTo pos target) 0.1)
-                           ; player has reached target
-                           (do
-                             (reset! player-target nil)
-                             (stop-clip astronaut))
-                           ; player move towards target
-                           (let [move (.clone target)
-                                 look (.clone target)
-                                 dir (-> move (.sub pos) .normalize (.multiplyScalar 0.1))]
-                             (.lookAt astronaut look)
-                             (.rotateY astronaut (/ Math.PI 2.0))
-                             (-> astronaut .-rotation)
-                             (.add pos dir)))))
-                     ; turn the sky pink when the rock and player come close together
-                     (let [d (.distanceTo (.-position rock) (.-position astronaut))
-                           r (if (< d 5) 0.99 0.125)]
-                       (aset scene "background" "r" r)
-                       (aset scene "fog" "color" "r" r))
-                     ; float the rock around
-                     (let [now (* (.getTime (js/Date.)) 0.0005)]
-                       (-> rock .-position (.set
-                                             (* (js/Math.sin now) 7)
-                                             (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
-                                             (* (js/Math.cos now) 8))))))))))
+             (defn picked [objects]
+               (doseq [x objects]
+                 (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
+                 (play-clip astronaut "Walk" gltf scene)
+                 (js/console.log "picked:" (.-point x) (-> x .-object .-name))))
 
-; handle mouse picking
-(picker/register [scene camera renderer]
-  (fn [picked]
-    (doseq [x picked]
-      (reset! player-target (THREE.Vector3. (-> x .-point .-x) 0 (-> x .-point .-z)))
-      (js/console.log "picked:" (.-point x) (-> x .-object .-name)))))
+             ; handle mouse picking
+             (defonce pick
+               (picker/register [scene camera renderer] #'picked))
+
+             (reset! gameloop
+                     (fn [delta]
+                       ; if the player is not on target
+                       (let [target @player-target
+                             pos (.-position astronaut)]
+                         (when target
+                           (if (< (.distanceTo pos target) 0.1)
+                             ; player has reached target
+                             (do
+                               (reset! player-target nil)
+                               (stop-clip astronaut))
+                             ; player move towards target
+                             (let [move (.clone target)
+                                   look (.clone target)
+                                   dir (-> move (.sub pos) .normalize (.multiplyScalar 0.1))]
+                               (.lookAt astronaut look)
+                               (.rotateY astronaut (/ Math.PI 2.0))
+                               (-> astronaut .-rotation)
+                               (.add pos dir)))))
+                       ; turn the sky pink when the rock and player come close together
+                       (let [d (.distanceTo (.-position rock) (.-position astronaut))
+                             r (if (< d 5) 0.99 0.125)]
+                         (aset scene "background" "r" r)
+                         (aset scene "fog" "color" "r" r))
+                       ; float the rock around
+                       (let [now (* (.getTime (js/Date.)) 0.0005)]
+                         (-> rock .-position (.set
+                                               (* (js/Math.sin now) 7)
+                                               (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
+                                               (* (js/Math.cos now) 8))))))))))
 
 (defonce e (engine/init :pixel-size 4))
 (defonce controls (engine/add-default-controls engine/camera engine/renderer))
-(js/console.log controls)
-(defonce anim (engine/animate controls))
+(defonce anim (engine/animate controls scene))
 
 (defn mount-root []
   (console.log "re-load")
