@@ -4,10 +4,6 @@
 
 (defonce THREE js/THREE)
 
-(defonce stats (new js/Stats))
-
-(def loader (THREE.GLTFLoader.))
-
 (defn on-window-resize [pixel-size camera renderer]
   (set! (.-aspect camera) (/ (.-innerWidth js/window) (.-innerHeight js/window)))
   (.updateProjectionMatrix camera)
@@ -38,7 +34,8 @@
   (let [container (.createElement js/document "div")
         scene (THREE.Scene.)
         camera (THREE.PerspectiveCamera. 70 (/ (.-innerWidth js/window) (.-innerHeight js/window)) 1 5000)
-        renderer (THREE.WebGLRenderer. #js {:antialias false})]
+        renderer (THREE.WebGLRenderer. #js {:antialias false})
+        stats (js/Stats.)]
 
     (.appendChild (.-body js/document) container)
 
@@ -60,7 +57,8 @@
     {:scene scene
      :controls (add-default-controls camera renderer)
      :camera camera
-     :renderer renderer}))
+     :renderer renderer
+     :stats stats}))
 
 (defn remove-all-meshes [scene]
   (let [children (-> scene .-children .slice)]
@@ -69,7 +67,7 @@
 
 (defn animate [eng clock]
   (let [delta (.getDelta clock)
-        {:keys [camera scene renderer controls]} @eng]
+        {:keys [camera scene renderer controls stats]} @eng]
     (js/requestAnimationFrame (partial animate eng clock))
     (.traverse
       scene
@@ -122,4 +120,6 @@
   (add-default-lights scene))
 
 (defn load-assets [assets-url done-fn & [progress-fn error-fn]]
-  (.load loader assets-url #(done-fn (apply-shadows %)) progress-fn error-fn))
+  (-> (THREE.GLTFLoader.)
+      (.load assets-url
+             #(done-fn (apply-shadows %)) progress-fn error-fn)))
