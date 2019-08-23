@@ -2,6 +2,7 @@
     (:require
       [px3d.engine :as engine :refer [scene camera renderer gameloop THREE]]
       [px3d.picker :as picker]
+      [px3d.procgen :as procgen]
       [px3d.animation :as animation]
       [px3d.assets :as assets]))
 
@@ -12,14 +13,7 @@
 
 (defonce player-target (atom nil))
 
-; seed random number generator from URL hash fragment
-(let [hashfrag (-> js/window .-location .-hash (.substr 1))
-      hashfrag (if (= hashfrag "") (-> js/Math .random .toString (.split ".") .pop) hashfrag)]
-  (aset js/window "location" "hash" hashfrag)
-  (.seedrandom js/Math hashfrag))
-
-(defn choice [a]
-  (nth a (int (* (js/Math.random) (count a)))))
+(procgen/seed-from-hash)
 
 (defn launch [controls]
   (js/console.log "scene" engine/scene)
@@ -60,7 +54,7 @@
 
            ; create 150 randomly generated pieces of scenery
            (doseq [x (range 150)]
-             (let [obj (.clone (.getObjectByName (.-scene gltf) (choice ["Tree001" "Tree002" "Tree003" "Rock001" "Rock003"])))]
+             (let [obj (.clone (.getObjectByName (.-scene gltf) (procgen/choice ["Tree001" "Tree002" "Tree003" "Rock001" "Rock003"])))]
                (-> obj .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
                (aset obj "rotation" "y" (* (js/Math.random) js/Math.PI 2))
                (aset obj "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
