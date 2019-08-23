@@ -11,6 +11,8 @@
 (defonce stats (new js/Stats))
 (defonce clock (new THREE.Clock))
 
+(def loader (THREE.GLTFLoader.))
+
 (defn on-window-resize [pixel-size]
   (set! (.-aspect camera) (/ (.-innerWidth js/window) (.-innerHeight js/window)))
   (.updateProjectionMatrix camera)
@@ -40,6 +42,11 @@
     (.addEventListener js/window "resize" (partial on-window-resize pixel-size) false)
     (on-window-resize pixel-size)
     true))
+
+(defn remove-all-meshes [scene]
+  (let [children (-> scene .-children .slice)]
+    (doseq [c children]
+      (.remove scene c))))
 
 (defn animate [controls scene]
   (let [delta (.getDelta clock)]
@@ -91,3 +98,21 @@
     (set! (.-maxDistance controls) 50)
     controls))
 
+(defn apply-shadows [assets]
+  ; set up every mesh to throw and receive shadows
+  (-> assets .-scene (.traverse (fn [node] (when (instance? THREE.Mesh node)
+                                             (aset node "castShadow" true)
+                                             (aset node "receiveShadow" true)))))
+  assets)
+
+(defn set-background [scene color]
+  ; add fog
+  (aset scene "fog" (THREE.FogExp2. color 0.0128 10))
+  (aset scene "background" (THREE.Color. color)))
+
+(defn setup-default-scene [scene]
+  (set-background scene 0x20AAF3)
+  (add-default-lights scene))
+
+(defn load-assets [assets-url done-fn & [progress-fn error-fn]]
+  (.load loader assets-url #(done-fn (apply-shadows %)) progress-fn error-fn))
