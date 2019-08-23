@@ -14,14 +14,12 @@
 (defonce stats (new js/Stats))
 (defonce clock (new THREE.Clock))
 
-(defn onWindowResize
-  [PIXELATE]
-  (fn []
-    (set! (.-aspect camera) (/ (.-innerWidth js/window) (.-innerHeight js/window)))
-    (.updateProjectionMatrix camera)
-    (.setSize renderer (/ (.-innerWidth js/window) PIXELATE) (/ (.-innerHeight js/window) PIXELATE))
-    (set! (.. renderer -domElement -style -width) (str (.-innerWidth js/window) "px"))
-    (set! (.. renderer -domElement -style -height) (str (.-innerHeight js/window) "px"))))
+(defn on-window-resize [pixel-size]
+  (set! (.-aspect camera) (/ (.-innerWidth js/window) (.-innerHeight js/window)))
+  (.updateProjectionMatrix camera)
+  (.setSize renderer (/ (.-innerWidth js/window) pixel-size) (/ (.-innerHeight js/window) pixel-size))
+  (set! (.. renderer -domElement -style -width) (str (.-innerWidth js/window) "px"))
+  (set! (.. renderer -domElement -style -height) (str (.-innerHeight js/window) "px")))
 
 (defn add-default-lights [scene]
     (.add scene (new THREE.AmbientLight 0xffffff 1.0))
@@ -41,7 +39,7 @@
       (.add scene light)))
 
 (defn init
-  [PIXELATE]
+  [& {:keys [pixel-size] :or {pixel-size 4}}]
   (let [;dragControls (new THREE.DragControls #js [] camera (.-domElement renderer))
         container (.createElement js/document "div")]
 
@@ -55,8 +53,8 @@
 
     (.setSize
       renderer
-      (/ (.-innerWidth js/window) PIXELATE)
-      (/ (.-innerHeight js/window) PIXELATE))
+      (/ (.-innerWidth js/window) pixel-size)
+      (/ (.-innerHeight js/window) pixel-size))
   
     (set! (.. renderer -shadowMap -enabled) true)
     (set! (.. renderer -shadowMap -type) (.-PCFShadowMap THREE))
@@ -78,11 +76,8 @@
     ;(.addEventListener dragControls "dragend" (fn [] (set! (.-enabled controls) true)))
 
     (.appendChild container (.-dom stats))
-    (.addEventListener js/window "resize" (onWindowResize PIXELATE) false)
-  
-    (set! (.. renderer -domElement -style -width) (str (.-innerWidth js/window) "px"))
-    (set! (.. renderer -domElement -style -height) (str (.-innerHeight js/window) "px")))
-  )
+    (.addEventListener js/window "resize" (partial on-window-resize pixel-size) false)
+    (on-window-resize pixel-size)))
 
 (defn animate
   []
