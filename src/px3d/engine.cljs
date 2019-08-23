@@ -39,13 +39,13 @@
   (let [container (.createElement js/document "div")
         scene (THREE.Scene.)
         camera (THREE.PerspectiveCamera. 70 (/ (.-innerWidth js/window) (.-innerHeight js/window)) 1 5000)
-        renderer (new THREE.WebGLRenderer #js {:antialias false})]
+        renderer (THREE.WebGLRenderer. #js {:antialias false})]
 
     (.appendChild (.-body js/document) container)
 
     (.set (.-position camera) 10 10 (- 10))
 
-    (set! (.-background scene) (new THREE.Color 0xf0f0f0))
+    (set! (.-background scene) (THREE.Color. 0xf0f0f0))
     (.setPixelRatio renderer (.-devicePixelRatio js/window))
     (.setSize
       renderer
@@ -85,9 +85,9 @@
     true))
 
 (defn add-default-lights [scene]
-  (.add scene (new THREE.AmbientLight 0xffffff 1.0))
+  (.add scene (THREE.AmbientLight. 0xffffff 1.0))
 
-  (let [light (new THREE.SpotLight 0xffffff 1.0)]
+  (let [light (THREE.SpotLight. 0xffffff 1.0)]
     (.set (.-position light) 100 100 100)
     (set! (.-castShadow light) true)
     (set! (.. light -shadow -camera -near) 10)
@@ -97,7 +97,7 @@
     (set! (.-angle light) (/ (.-PI js/Math) 12))
     (.add scene light))
 
-  (let [light (new THREE.DirectionalLight 0xffffff 0.5)]
+  (let [light (THREE.DirectionalLight. 0xffffff 0.5)]
     (.set (.-position light) 200 200 200)
     (.add scene light)))
 
