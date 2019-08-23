@@ -1,6 +1,6 @@
 (ns px3d.core
     (:require
-      [px3d.engine :as engine :refer [engine scene camera controls renderer gameloop THREE]]
+      [px3d.engine :as engine :refer [scene camera renderer gameloop THREE]]
       [px3d.assets :as assets]))
 
 (def background-color 0x20AAF3)
@@ -73,7 +73,7 @@
     (stop-clip container)
     (.play (.clipAction (aget container "mixer") clip (aget container "children" 0)))))
 
-(defn launch [objs]
+(defn launch [controls]
   ; clean up scene
   (let [children (-> scene .-children .slice)]
     (doseq [c children]
@@ -174,16 +174,16 @@
                                              (+ 5 (* (js/Math.sin (* now 2.33)) 0.5))
                                              (* (js/Math.cos now) 8))))))))))
 
+(defonce e (engine/init :pixel-size 4))
+(defonce controls (engine/add-default-controls engine/camera engine/renderer))
+(js/console.log controls)
+(defonce anim (engine/animate controls))
+
 (defn mount-root []
   (console.log "re-load")
   ;(print "Assets checksum:" (str "0x" (.toString assets/checksum 16)))
-  (launch nil))
+  (launch controls))
 
 (defn init! []
-  (when-not (:started? @engine)
-    (do
-      (engine/init 4)
-      (engine/animate)
-      (swap! engine assoc :started? true)))
   (mount-root))
 
