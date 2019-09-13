@@ -44,11 +44,32 @@
         (.add scene ground))
 
       ; create 150 randomly generated pieces of scenery
-      (doseq [x (range 150)]
-        (let [obj (.clone (.getObjectByName (.-scene assets) (procgen/choice ["Tree001" "Tree002" "Tree003" "Rock001" "Rock003"])))]
+
+      (doseq [x (range 50)]
+        (let [obj (.clone (.getObjectByName (.-scene assets) (procgen/choice ["Rock001" "Rock002" "Rock003" "Rock004" "Rock005"])))]
           (-> obj .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
           (aset obj "rotation" "y" (* (js/Math.random) js/Math.PI 2))
-          (aset obj "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
+          ;(aset obj "scale" "y" (+ (* (js/Math.random) 0.2) 1.0))
+          (let [s (* (js/Math.random) 10.0)]
+            (aset obj "scale" "x" s)
+            (aset obj "scale" "y" s)
+            (aset obj "scale" "z" s))
+          (.add scene obj)))
+
+      (doseq [x (range 50)]
+        (let [obj (.clone (.getObjectByName (.-scene assets) (procgen/choice ["Tree001" "Tree002" "Tree003"])))]
+          (-> obj .-position (.set (* 100 (- (js/Math.random) 0.5)) 0 (* 100 (- (js/Math.random) 0.5))))
+          (aset obj "rotation" "y" (* (js/Math.random) js/Math.PI 2))
+          (.add scene obj)))
+
+      (doseq [x (range 20)]
+        (let [obj (.clone (.getObjectByName (.-scene assets) (procgen/choice ["Mushroom001"])))]
+          (-> obj .-position (.set (* 200 (- (js/Math.random) 0.5)) 0 (* 200 (- (js/Math.random) 0.5))))
+          (aset obj "rotation" "y" (* (js/Math.random) js/Math.PI 2))
+          (let [s (* (js/Math.random) 3.0)]
+            (aset obj "scale" "x" s)
+            (aset obj "scale" "y" s)
+            (aset obj "scale" "z" s))
           (.add scene obj)))
 
       ; add a couple of meshes to animate
@@ -63,6 +84,18 @@
         (-> astronaut .-position (.set 8 0 8))
         ; center the orbit controls on the astronaut
         (aset controls "target" (.-position astronaut))
+
+        ; add the tentacles
+        (doseq [x (range 5)]
+          (let [t (a "Tentacle")]
+            (-> t .-position (.set  (+ -50 (* (js/Math.random) 3)) 0 (+ -30 (* (js/Math.random) 3))))
+            (let [s (+ (* (js/Math.random) 0.75) 0.5)]
+              (aset t "scale" "x" (* s 2))
+              (aset t "scale" "y" s)
+              (aset t "scale" "z" (* s 2)))
+            (aset t "rotation" "y" (* (js/Math.random) js/Math.PI 2))
+            (let [wave (animation/play-clip t (procgen/choice ["Wave1" "Wave2"]) assets scene)]
+              (aset wave "timeScale" (+ (* (js/Math.random) 0.25) 0.1)))))
 
         ; remember the newly added objects
         (swap! state assoc
