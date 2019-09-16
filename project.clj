@@ -38,6 +38,14 @@
                          :pretty-print  true}
                         :figwheel
                         {:on-jsload "px3d.core/mount-root"}}
+                       :worker ; https://github.com/bhauman/lein-figwheel/wiki/Using-Figwheel-with-Web-Workers
+                       {:source-paths ["src/worker"]
+                        :figwheel true
+                        :compiler {:output-to "public/js/worker.js"
+                                   :output-dir "public/js/out_worker"
+                                   :source-map-timestamp true
+                                   :optimizations :none
+                                   :target :webworker}}
                        :release
                        {:source-paths ["src" "env/prod/cljs"]
                         :compiler

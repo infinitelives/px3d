@@ -8,6 +8,8 @@
 
 (procgen/seed-from-hash)
 
+(defonce worker (js/Worker. "worker/bootstrap_worker.js"))
+
 ; game state
 (defonce state
   (atom {:player-target
