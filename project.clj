@@ -41,7 +41,9 @@
                        :worker ; https://github.com/bhauman/lein-figwheel/wiki/Using-Figwheel-with-Web-Workers
                        {:source-paths ["src/worker"]
                         :figwheel true
-                        :compiler {:output-to "public/js/worker.js"
+                        :compiler {:npm-deps {"rot-js" "git+https://github.com/ondras/rot.js#e740d34"}
+                                   :install-deps true
+                                   :output-to "public/js/worker.js"
                                    :output-dir "public/js/out_worker"
                                    :source-map-timestamp true
                                    :optimizations :none

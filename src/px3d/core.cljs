@@ -10,6 +10,13 @@
 
 (defonce worker (js/Worker. "worker/bootstrap_worker.js"))
 
+(aset worker "onmessage" (fn [e]
+                           (js/console.log "Got back:" e)))
+
+(.postMessage worker "SENDING THIS")
+
+(print "R" (rand-nth [1 2 3]))
+
 ; game state
 (defonce state
   (atom {:player-target
