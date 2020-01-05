@@ -1,6 +1,8 @@
 /target
 /classes
 /checkouts
+.shadow-cljs
+node_modules
 profiles.clj
 pom.xml
 pom.xml.asc
@@ -11,6 +13,7 @@ pom.xml.asc
 /resources/public/js
 /public/js
 /out
+workspace
 /.repl
 *.log
 /.env

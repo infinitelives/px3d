@@ -1,4 +1,5 @@
-(ns px3d.picker)
+(ns px3d.picker
+  (:require ["three/build/three.module.js" :as THREE]))
 
 (defn mouse-pick [ev raycaster container scene camera]
   (let [pos #js {:x (-> ev .-clientX (/ (aget container "clientWidth")) (* 2) (- 1))
@@ -11,7 +12,7 @@
 
 (defn register [[scene camera renderer] callback]
   "register mouse pick event"
-  (let [raycaster (THREE.Raycaster.)
+  (let [raycaster (THREE/Raycaster.)
         picker (partial mouse-pick raycaster #js {} scene camera)
         moved (atom false)
         down (fn [ev] (reset! moved [(.-clientX ev) (.-clientY ev)]))

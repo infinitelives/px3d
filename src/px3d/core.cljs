@@ -1,17 +1,20 @@
 (ns px3d.core
     (:require
-      [px3d.engine :as engine :refer [THREE]]
+      ["three/build/three.module.js" :as THREE]
+      [px3d.engine :as engine]
       [px3d.picker :as picker]
       [px3d.procgen :as procgen]
       [px3d.animation :as animation]
       [px3d.assets :as assets]))
+
+(js/console.log "assets" assets/checksum)
 
 (procgen/seed-from-hash)
 
 ; game state
 (defonce state
   (atom {:player-target
-         (THREE.Vector3. 8 0 8)}))
+         (THREE/Vector3. 8 0 8)}))
 
 ; create the px3d engine and start an animation loop
 (defonce e (engine/start-animation-loop
@@ -34,9 +37,9 @@
       ;(.add scene (.-scene assets))
 
       ; add a ground plane
-      (let [ground (THREE.Mesh.
-                     (THREE.CylinderGeometry. 150 150 1 32)
-                     (THREE.MeshLambertMaterial. #js {:color 0x637C60}))]
+      (let [ground (THREE/Mesh.
+                     (THREE/CylinderGeometry. 150 150 1 32)
+                     (THREE/MeshLambertMaterial. #js {:color 0x637C60}))]
         (aset ground "position" "y" -0.5)
         (aset ground "receiveShadow" true)
         (aset ground "castShadow" true)
@@ -111,7 +114,7 @@
           {:keys [scene]} @e]
       (js/console.log "picked:" (.-point obj) (-> obj .-object .-name))
       (animation/play-clip astronaut "Walk" assets scene)
-      (swap! state assoc :player-target (THREE.Vector3. (-> obj .-point .-x) 0 (-> obj .-point .-z))))))
+      (swap! state assoc :player-target (THREE/Vector3. (-> obj .-point .-x) 0 (-> obj .-point .-z))))))
 
 ; do some stuff in the world
 ; if using core.async this could be a bunch of independent
@@ -133,7 +136,7 @@
                 look (.clone player-target)
                 dir (-> move (.sub pos) .normalize (.multiplyScalar 0.1))]
             (.lookAt astronaut look)
-            (.rotateY astronaut (/ Math.PI 2.0))
+            (.rotateY astronaut (/ js/Math.PI 2.0))
             (-> astronaut .-rotation)
             (.add pos dir))))
       ; turn the sky pink when the rock and player come close together
@@ -157,6 +160,5 @@
 ; kick off a singleton running the game loop
 (defonce run-gameloop (gameloop))
 
-; figwheel
-(defn init! [])
-(defn mount-root [])
+(defn main [])
+
