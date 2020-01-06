@@ -1,8 +1,8 @@
-![Tech demo](./around.gif)
+![Tech demo](./gifs/around.gif)
 
 Hot reloading Blender edits into running Three.js ClojureScript:
 
-![Screencast](./screencast.gif)
+![Screencast](./gifs/screencast.gif)
 
 ### Development mode
 To start the Figwheel compiler, navigate to the project folder and run the following command in the terminal:
