@@ -1,2 +1,2 @@
 (ns px3d.assets)
-(def checksum 0xe403ed4f)
+(def checksum 0x2567b775)
