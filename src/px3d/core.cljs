@@ -9,8 +9,6 @@
 
 (js/console.log "assets" assets/checksum)
 
-(procgen/seed-from-hash)
-
 ; game state
 (defonce state
   (atom {:player-target
@@ -32,6 +30,8 @@
     "models/assets.glb"
     (fn [assets]
       (js/console.log "gltf bundle:" assets)
+
+      (procgen/seed-from-hash)
 
       ; This will add the entire Blender scene into the threejs scene
       ;(.add scene (.-scene assets))
