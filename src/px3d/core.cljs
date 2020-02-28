@@ -122,8 +122,9 @@
 (defn gameloop []
   ; if the player is not on target
   (let [{:keys [astronaut rock ship player-target]} @state
-        {:keys [scene]} @e
-        pos (if astronaut (.-position astronaut))]
+        {:keys [camera scene]} @e
+        pos (if astronaut (.-position astronaut))
+        quat (if astronaut (.-quaternion astronaut))]
     (when (and scene astronaut)
       (when player-target
         (if (< (.distanceTo pos player-target) 0.1)
@@ -139,6 +140,13 @@
             (.rotateY astronaut (/ js/Math.PI 2.0))
             (-> astronaut .-rotation)
             (.add pos dir))))
+      ; gently push camera to camera follow mode
+      (let [player-direction (-> (THREE/Vector3. 10 7 0) (.applyQuaternion quat))
+            camera-pos (if camera (.-position camera))
+            camera-move-to (-> player-direction (.add pos) (.sub camera-pos))
+            camera-move (-> (.clone camera-move-to) .normalize (.multiplyScalar 0.1))]
+        (if (> (.length camera-move-to) 0.1)
+          (.add camera-pos camera-move)))
       ; turn the sky pink when the rock and player come close together
       (let [d (.distanceTo (.-position rock) pos)
             r (if (< d 5) 0.99 0.125)]
