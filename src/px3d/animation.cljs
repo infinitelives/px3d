@@ -12,7 +12,7 @@
     container))
 
 (defn stop-clip [container]
-  (-> container .-mixer .stopAllAction))
+  (-> container .-mixer (.setTime 0) .stopAllAction))
 
 (defn play-clip [container animation-name gltf scene]
   (let [clip (THREE/AnimationClip.findByName (aget gltf "animations") animation-name)]
