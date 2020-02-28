@@ -11,12 +11,12 @@
 
 ; game state
 (defonce state
-  (atom {:player-target
-         (THREE/Vector3. 8 0 8)}))
+  (atom {:player-target (THREE/Vector3. 8 0 8)
+         :camera-lock true}))
 
 ; create the px3d engine and start an animation loop
 (defonce e (engine/start-animation-loop
-             (atom (engine/init :pixel-size 4))
+             (atom (engine/init :pixel-size 4 :controls-callback (fn [ev] (swap! state assoc :camera-lock false))))
              (fn [] (comment "callback inside animation loop"))))
 
 ; set up the scene with objects on reload
@@ -84,7 +84,7 @@
         (-> ship .-position (.set 10 3 10))
         (-> rock .-position (.set -5 4 -5))
         (-> rock .-scale (.set 2 3 2))
-        (-> astronaut .-position (.set 8 0 8))
+        (-> astronaut .-position (.copy (THREE/Vector3. 8 0 8)))
         ; center the orbit controls on the astronaut
         (aset controls "target" (.-position astronaut))
 
@@ -114,14 +114,16 @@
           {:keys [scene]} @e]
       (js/console.log "picked:" (.-point obj) (-> obj .-object .-name))
       (animation/play-clip astronaut "Walk" assets scene)
-      (swap! state assoc :player-target (THREE/Vector3. (-> obj .-point .-x) 0 (-> obj .-point .-z))))))
+      (swap! state assoc
+             :player-target (THREE/Vector3. (-> obj .-point .-x) 0 (-> obj .-point .-z))
+             :camera-lock true))))
 
 ; do some stuff in the world
 ; if using core.async this could be a bunch of independent
 ; entity loops
 (defn gameloop []
   ; if the player is not on target
-  (let [{:keys [astronaut rock ship player-target]} @state
+  (let [{:keys [astronaut rock ship player-target camera-lock]} @state
         {:keys [camera scene]} @e
         pos (if astronaut (.-position astronaut))
         quat (if astronaut (.-quaternion astronaut))]
@@ -130,7 +132,7 @@
         (if (< (.distanceTo pos player-target) 0.1)
           ; player has reached the player-target
           (do
-            (swap! state assoc :player-target nil)
+            (swap! state assoc :player-target)
             (animation/stop-clip astronaut))
           ; player move towards player-target
           (let [move (.clone player-target)
@@ -140,13 +142,16 @@
             (.rotateY astronaut (/ js/Math.PI 2.0))
             (-> astronaut .-rotation)
             (.add pos dir))))
-      ; gently push camera to camera follow mode
-      (let [player-direction (-> (THREE/Vector3. 10 7 0) (.applyQuaternion quat))
-            camera-pos (if camera (.-position camera))
-            camera-move-to (-> player-direction (.add pos) (.sub camera-pos))
-            camera-move (-> (.clone camera-move-to) .normalize (.multiplyScalar 0.1))]
-        (if (> (.length camera-move-to) 0.1)
-          (.add camera-pos camera-move)))
+      (when camera-lock
+        ; gently push camera to camera follow mode
+        (let [player-direction (-> (THREE/Vector3. 10 7 0) (.applyQuaternion quat))
+              camera-pos (if camera (.-position camera))
+              camera-move-to (-> player-direction (.add pos) (.sub camera-pos))
+              camera-snap-speed 0.05
+              camera-move (-> (.clone camera-move-to) (.multiplyScalar camera-snap-speed))]
+          (if (> (.length camera-move-to) camera-snap-speed)
+            (.add camera-pos camera-move)
+            (swap! state assoc :camera-lock false))))
       ; turn the sky pink when the rock and player come close together
       (let [d (.distanceTo (.-position rock) pos)
             r (if (< d 5) 0.99 0.125)]

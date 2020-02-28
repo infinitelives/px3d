@@ -11,7 +11,7 @@
   (set! (.. renderer -domElement -style -width) (str (.-innerWidth js/window) "px"))
   (set! (.. renderer -domElement -style -height) (str (.-innerHeight js/window) "px")))
 
-(defn add-default-controls [camera renderer]
+(defn add-default-controls [camera renderer controls-callback]
   ; allow dragging of objects:
   ;dragControls (new THREE.DragControls #js list-of-objects camera (.-domElement renderer))
   ;(.addEventListener dragControls "dragstart" (fn [] (set! (.-enabled controls) false)))
@@ -21,16 +21,18 @@
     (set! (.-zoomSpeed controls) 1.2)
     (set! (.-panSpeed controls) 0.8)
     (set! (.-enableZoom controls) true)
-    (set! (.-enablePan controls) true)
+    (set! (.-enablePan controls) false)
     (set! (.-staticMoving controls) true)
+    (set! (.-enableKeys controls) false)
     (set! (.-dynamicDampingFactor controls) 0.3)
     (set! (.-maxPolarAngle controls) (- (/ (.-PI js/Math) 2) 0.175))
     (set! (.-minDistance controls) 5)
     (set! (.-maxDistance controls) 50)
+    (.addEventListener controls "start" controls-callback)
     controls))
 
 (defn init
-  [& {:keys [pixel-size] :or {pixel-size 4}}]
+  [& {:keys [pixel-size controls-callback] :or {pixel-size 4}}]
   (let [container (.createElement js/document "div")
         scene (THREE/Scene.)
         camera (THREE/PerspectiveCamera. 70 (/ (.-innerWidth js/window) (.-innerHeight js/window)) 1 5000)
@@ -55,7 +57,7 @@
     (.addEventListener js/window "resize" (partial on-window-resize pixel-size camera renderer) false)
     (on-window-resize pixel-size camera renderer)
     {:scene scene
-     :controls (add-default-controls camera renderer)
+     :controls (add-default-controls camera renderer controls-callback)
      :camera camera
      :renderer renderer
      :stats stats}))
