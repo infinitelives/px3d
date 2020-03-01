@@ -84,7 +84,7 @@
         (-> ship .-position (.set 10 3 10))
         (-> rock .-position (.set -5 4 -5))
         (-> rock .-scale (.set 2 3 2))
-        (-> astronaut .-position (.copy (THREE/Vector3. 8 0 8)))
+        (-> astronaut .-position (.copy (or (@state :player-last) (THREE/Vector3. 8 0 8))))
         ; center the orbit controls on the astronaut
         (aset controls "target" (.-position astronaut))
 
@@ -141,7 +141,8 @@
             (.lookAt astronaut look)
             (.rotateY astronaut (/ js/Math.PI 2.0))
             (-> astronaut .-rotation)
-            (.add pos dir))))
+            (.add pos dir)
+            (swap! state assoc :player-last (.clone pos)))))
       (when camera-lock
         ; gently push camera to camera follow mode
         (let [player-direction (-> (THREE/Vector3. 10 7 0) (.applyQuaternion quat))
